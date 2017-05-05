@@ -94,7 +94,7 @@ __Endpoint:__ /v1/resources/interface-bfeditor?
          "workChangeDate": ${BIBFRAME Work change date},
          "workLabel": ${BIBFRAME Work rdfs:label},
          "docUris": [
-         	[${deleted triplestore doc URIs}]
+         	[${triplestore doc URIs}]
          ]
      }
     ],
