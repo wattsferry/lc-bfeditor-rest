@@ -5,11 +5,12 @@
 
 #### Bootstrap and Deployment
 
-This is a Roxy-based deployment, set for a app-type=rest as opposed to "bare".  
+This is a Roxy-based deployment, set for an app-type of "rest" as opposed to "bare".  This provides the MarkLogic REST API extension framework capabilities.
 
 Only a single host local laptop/desktop environment has been accounted for at present.
 
 * Edit deploy/build.config for settings.
+* See deploy/ml-config.xml for added range indexes, enabled triple index, and security model settings.
 * ./ml bootstrap
 * ./ml deploy modules (this also handles setting up the REST API)
 
@@ -24,7 +25,7 @@ __Endpoint:__ /v1/resources/interface-bfeditor?
 ##### PUT 
 
 * __Use:__ For ingesting a new graph, or overwriting an existing graph.  Requires BFE presentation or middle tier to supply both a UUID and a cataloging username, like khes, ntra, or cred.
-* __Outcome:__ Persists the graph as managed triples into the MarkLogic triple store, and returns a JSON response showing the document URI locations of the stored files.
+* __Outcome:__ Persists the named graph, with accompanying range-indexed document properties, as managed triples into the MarkLogic triple store, and returns a JSON response showing the document URI locations of the stored files.
 * __Sample request:__ /v1/resources/interface-bfeditor?rs:user={user}&rs:uuid={uuid}
 * __Request parameters:__
 * * rs:user (A cataloging/user shortname)
