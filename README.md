@@ -19,7 +19,7 @@ Only a single host local laptop/desktop environment has been accounted for at pr
 
 The REST endpoint currently lives at port 8287.
 
-__Endpoint:__ /v1/resources/interface-bfeditor?
+__Endpoint:__ /v1/resources/interface-bfeditor
 
 ##### PUT 
 
@@ -39,7 +39,7 @@ __Endpoint:__ /v1/resources/interface-bfeditor?
     "namedGraph": "/editor/cred/778cb924-2388-11e7-93ae-92361f002671",
     "uuid": "778cb924-2388-11e7-93ae-92361f002671",
     "insertedDocuments":[
-    	[${inserted triplestore doc URIs}]
+    	${inserted triplestore doc URIs}
     ]
 }
 ```
@@ -62,7 +62,7 @@ __Endpoint:__ /v1/resources/interface-bfeditor?
     "namedGraph": "/editor/cred/778cb924-2388-11e7-93ae-92361f002671",
     "uuid": "778cb924-2388-11e7-93ae-92361f002671",
     "insertedDocuments":[
-    	[${inserted/updated triplestore doc URIs}]
+    	${inserted/updated triplestore doc URIs}
     ]
 }
 ```
@@ -94,7 +94,7 @@ __Endpoint:__ /v1/resources/interface-bfeditor?
          "workChangeDate": ${BIBFRAME Work change date},
          "workLabel": ${BIBFRAME Work rdfs:label},
          "docUris": [
-         	[${triplestore doc URIs}]
+         	${triplestore doc URIs}
          ]
      }
     ],
