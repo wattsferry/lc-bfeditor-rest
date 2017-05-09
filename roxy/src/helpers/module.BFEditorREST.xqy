@@ -40,10 +40,10 @@ declare function edit:operation-get-graph($params as map:map, $accept as xs:stri
         (: A SPARQL named graph query with DESCRIBE or SELECT ?s ?p ?o also de-dupes, but cts:triples is faster. :)
         let $triples := cts:triples((), (), (), (), (), cts:collection-query($graph-iri))
         return
-            if (fn:count($triples) gt 0) then
-                sem:rdf-serialize($triples, edit:parse-type($accept))
+            if ($triples instance of empty-sequence()) then
+                $triples
             else
-                ()
+                sem:rdf-serialize($triples, edit:parse-type($accept))
     } catch($e) {
         let $_ := xdmp:log($e, "error")
         return
@@ -77,6 +77,10 @@ declare function edit:operation-get-list-graphs($params as map:map) as node() {
             ))
         )
         let $_ := xdmp:log($query, "debug")
+        let $earliest-tuple := cts:value-tuples(cts:element-reference(xs:QName("idx:graph-ingest-dt"), "type=dateTime"), ("limit=1", "ascending", "concurrent"))
+        let $latest-tuple := cts:value-tuples(cts:element-reference(xs:QName("idx:graph-ingest-dt"), "type=dateTime"), ("limit=1", "descending", "concurrent"))
+        let $edt := if ($earliest-tuple instance of empty-sequence()) then null-node{} else json:array-values($earliest-tuple)
+        let $ldt := if ($latest-tuple instance of empty-sequence()) then null-node{} else json:array-values($latest-tuple)
         let $tuples := cts:value-tuples(
             (
                 cts:element-reference(xs:QName("idx:graph-ingest-dt"), "type=dateTime"),
@@ -87,9 +91,9 @@ declare function edit:operation-get-list-graphs($params as map:map) as node() {
                 cts:element-reference(xs:QName("idx:graph-work-label"))
             ), ($limit, $sort[1], "properties", "concurrent"), $query
         )
-        return
+        let $graph-objects :=
             if (fn:count($tuples) gt 0) then
-                let $graph-objects := 
+                array-node{
                     for $t in $tuples
                     return
                         object-node{
@@ -103,16 +107,29 @@ declare function edit:operation-get-list-graphs($params as map:map) as node() {
                                 cts:uris((), (), cts:collection-query($t[2]))
                             }
                         }
-                    return
-                        object-node{
-                            "matchingGraphs": array-node{$graph-objects},
-                            "elapsedTime": xdmp:elapsed-time() - $start,
-                            "requestedSortOrder": $sort[1],
-                            "ascendingResumptionToken": $graph-objects[1]/graphIngestDateTime,
-                            "descendingResumptionToken": $graph-objects[fn:last()]/graphIngestDateTime
-                        }
+                    }
             else
-                ()
+                null-node{}
+        let $next-graph-dateTime := 
+            if ($graph-objects instance of null-node()) then
+                $graph-objects
+            else if ($sort[1] eq "descending") then
+                json:array-values($tuples[fn:last()])[1]
+            else if ($sort[1] eq "ascending") then
+                json:array-values($tuples[1])[1]
+            else
+                null-node{}
+        return
+            object-node{
+                "matchingGraphs": $graph-objects,
+                "elapsedTime": xdmp:elapsed-time() - $start,
+                "requestedSortOrder": $sort[1],
+                "requestedLimit": fn:substring-after($limit, "limit="),
+                "requestedDateTime": $dateTime,
+                "earliestDateTime": $edt,
+                "latestDateTime": $ldt,
+                "nextDateTime": $next-graph-dateTime
+            }
     } catch($e) {
         let $_ := xdmp:log($e, "error")
         return
@@ -153,27 +170,33 @@ declare function edit:operation-insert-or-update($params as map:map, $input as d
         let $user-editor := "/editor/" || $user || "/"
         let $user-date := $user-editor || $date || "/"
         let $graph-iri := sem:iri($user-editor || $uuid)
-        let $graph-exists := cts:collections((), ("limit=1"), cts:collection-query($graph-iri cast as xs:string))
+        let $graph-cln-q := cts:collection-query($graph-iri cast as xs:string)
+        let $graph-exists := cts:collections((), ("limit=1"), $graph-cln-q)
         let $collections := ($graph-iri cast as xs:string, "/editor/", "/editor/" || $date || "/", $user-editor, $user-date, "originalBF")
         let $triples := sem:rdf-parse($input, edit:parse-type($contenttype))
-        let $graph-properties := edit:graph-properties($triples, $graph-iri, $user, $uuid)
         let $insert := 
             if ($graph-exists instance of empty-sequence()) then
                 (
-                   sem:graph-insert($graph-iri, $triples, $edit:permissions, $collections),
-                   xdmp:spawn-function(function() {xdmp:document-set-properties($graph-iri, ($graph-properties))}, $edit:spawn-options)
+                    sem:graph-insert($graph-iri, $triples, $edit:permissions, $collections),
+                    xdmp:spawn-function(function() {
+                        xdmp:document-set-properties($graph-iri, edit:graph-properties($triples, $graph-iri, $user, $uuid))
+                    }, $edit:spawn-options)
                 )
             else
                 if (fn:matches($method, "PUT", "i")) then
                     (
                         xdmp:spawn-function(function() {sem:graph-delete($graph-iri)}, $edit:spawn-options),
                         sem:graph-insert($graph-iri, $triples, $edit:permissions, $collections),
-                        xdmp:spawn-function(function() {xdmp:document-set-properties($graph-iri, ($graph-properties))}, $edit:spawn-options)
+                        xdmp:spawn-function(function() {
+                            xdmp:document-set-properties($graph-iri, edit:graph-properties($triples, $graph-iri, $user, $uuid))
+                        }, $edit:spawn-options)
                     )
                 else (:POST:)
                     (
                         sem:graph-insert($graph-iri, $triples, $edit:permissions, $collections),
-                        xdmp:spawn-function(function() {xdmp:document-set-properties($graph-iri, ($graph-properties))}, $edit:spawn-options)
+                        xdmp:spawn-function(function() {
+                            xdmp:document-set-properties($graph-iri, edit:graph-properties((sem:graph($graph-iri), $triples), $graph-iri, $user, $uuid))
+                        }, $edit:spawn-options)
                     )
         let $response := object-node{
             "namedGraph": $graph-iri, 

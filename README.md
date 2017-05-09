@@ -69,8 +69,8 @@ __Endpoint:__ /v1/resources/interface-bfeditor
 
 ##### GET List Graphs
 
-* __Use:__ For deleting an existing named graph.  Requires BFE presentation or middle tier to supply both a UUID and a cataloging username, like khes, ntra, or cred.
-* __Outcome:__ Persists the new named graph, or adds triples to the existing named graph, with accompanying range-indexed document properties, as managed triples into the MarkLogic triple store, and returns a JSON response showing the document URI locations of the stored files.
+* __Use:__ Return back a dateTime-oriented list of graphs per cataloger user, either ascending or descending (default).  Default limit is 10, default dateTime is fn:current-dateTime().
+* __Outcome:__ Returns a JSON response showing the matching graphs, and a recall of requested parameters, with a dateTime-driven approach to pagination.  Use the "nextDateTime" property to feed into the rs:dateTime param on the next call for the next set of resources.
 * __Sample request:__ /v1/resources/interface-bfeditor?rs:type=ListGraphs&rs:user=(user)&rs:sort=decending&rs:limit=10&rs:dateTime=2017-05-01T15:11:36.0791-04:00
 * __Request parameters:__
 * * rs:type=ListGraphs
@@ -100,16 +100,19 @@ __Endpoint:__ /v1/resources/interface-bfeditor
     ],
     "elapsedTime": ${xs:duration of execution runtime},
     "requestedSortOrder": ${user requested sort order},
-    "ascendingResumptionToken": ${earliest graphIngestDateTime},
-    "descendingResumptionToken": ${latest graphIngestDateTime}
+    "requestedLimit": ${integer},
+    "requestedDateTime": ${dateTime},
+    "earliestDateTime": ${dateTime},
+    "latestDateTime": ${dateTime},
+    "nextDateTime": ${dateTime}
 }
 
 ```
 
 ##### GET Named Graph
 
-* __Use:__ For deleting an existing named graph.  Requires BFE presentation or middle tier to supply both a UUID and a cataloging username, like khes, ntra, or cred.
-* __Outcome:__ Persists the new named graph, or adds triples to the existing named graph, with accompanying range-indexed document properties, as managed triples into the MarkLogic triple store, and returns a JSON response showing the document URI locations of the stored files.
+* __Use:__ For returning a single graph.
+* __Outcome:__ Returns the graph, in desired RDF serialization.
 * __Sample request:__ /v1/resources/interface-bfeditor?rs:graph={named-graph IRI}&rs:type=GetGraph
 * __Request parameters:__
 * * rs:type=GetGraph
