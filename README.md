@@ -132,11 +132,11 @@ Varied RDF serializations, depends on requested "Accept" type
 
 ##### DELETE
 
-* __Use:__ For deleting an existing named graph.  Requires BFE presentation or middle tier to supply both a UUID and a cataloging username, like khes, ntra, or cred.
-* __Outcome:__ Persists the new named graph, or adds triples to the existing named graph, with accompanying range-indexed document properties, as managed triples into the MarkLogic triple store, and returns a JSON response showing the document URI locations of the stored files.
-* __Sample request:__ /v1/resources/interface-bfeditor?rs:uuid={uuid} 
+* __Use:__ For deleting an existing named graph.  Requires BFE presentation or middle tier to supply the Graph IRI, usually determined after a GET ListGraphs call.
+* __Outcome:__ Deletes the named graph.
+* __Sample request:__ /v1/resources/interface-bfeditor?rs:graph={iri} 
 * __Request parameters:__
-* * rs:uuid (A UUID)
+* * rs:graph (A Graph IRI)
 * __Request headers:__ None 
 * __Request payload/body:__ None
 * __Response codes:__ 200 OK (application/json); 404 Not Found (text/plain); 500 Internal Server Error (application/xml)
