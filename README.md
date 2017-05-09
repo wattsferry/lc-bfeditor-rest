@@ -9,10 +9,13 @@ This is a Roxy-based deployment, set for an app-type of "rest" as opposed to "ba
 
 Only a single host local laptop/desktop environment has been accounted for at present.
 
-* Edit deploy/build.config for settings.
+To get started, after pull:
+
+* Change directory to roxy/
+* See deploy/build.config for settings.
 * See deploy/ml-config.xml for added range indexes, enabled triple index, and security model settings.
-* ./ml bootstrap
-* ./ml deploy modules (this also handles setting up the REST API)
+* ./ml local bootstrap
+* ./ml local deploy modules (this also handles setting up the REST API)
 * No URL rewriting has been attempted yet for providing cleaner, RESTful URIs.  TODO.
 
 #### Sample calls:
